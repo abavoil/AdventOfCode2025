@@ -8,7 +8,7 @@ function parse_rotation(rot)
     return n
 end
 
-function solveA(lines)
+function solve1(lines)
     zero_count = 0
     p = 50
     for l in lines
@@ -19,7 +19,7 @@ function solveA(lines)
     return zero_count
 end
 
-function solveB_naive(lines)
+function solve2_naive(lines)
     zero_count = 0
     p = 50
     for l in lines
@@ -31,13 +31,13 @@ function solveB_naive(lines)
                 this_zero_count += 1
             end
         end
-        @info l p this_zero_count
+        # @info l p this_zero_count
         zero_count += this_zero_count
     end
     return zero_count
 end
 
-function solveB(lines)
+function solve2(lines)
     zero_count = 0
     p = 50
     for l in lines
@@ -73,9 +73,9 @@ lines_L = ["L50", "L0", "L50", "L100", "L150"]
 
 function solve(lines; part1=false)
     if part1
-        return solveA(lines)
+        return solve1(lines)
     else
-        return solveB(lines)
+        return solve2(lines)
     end
 end
 
@@ -86,6 +86,6 @@ end
 @test solve(lines_R; part1=true) == 3
 @test solve(lines_R) == 4
 
-lines = readlines("data/day01_test.txt")
+lines = readlines("data/day01.txt")
 println(solve(lines; part1=true))
 println(solve(lines))
