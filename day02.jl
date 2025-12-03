@@ -119,7 +119,10 @@ end
 @btime solve(readlines("data/day2.txt"))
 
 
-#= Notes for part 1
+#= TODO
+1. Instead of using a set, we can check wether the repeated sequence is itself a repeating sequence, and only add to the count if it is not (is_primitive)
+
+2. Notes for part 1
 
 a, b = 95, 115
 min_n_rep = 2
