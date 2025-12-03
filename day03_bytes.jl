@@ -1,4 +1,4 @@
-using BenchmarkTools
+using Test
 
 function maximum_subnumber(line, out_len)
     a = codeunits(line)
@@ -33,8 +33,8 @@ function maximum_subnumber(line, out_len)
     return out
 end
 
-function solve(lines; partA=false)
-    len = ifelse(partA, 2, 12)
+function solve(lines; part1=false)
+    len = ifelse(part1, 2, 12)
     total = 0
     for line in lines
         total += maximum_subnumber(line, len)
@@ -42,9 +42,9 @@ function solve(lines; partA=false)
     return total
 end
 
-@test solve(readlines("data/day03_test.txt"); partA=true) == 357
+@test solve(readlines("data/day03_test.txt"); part1=true) == 357
 @test solve(readlines("data/day03_test.txt")) == 3121910778619
 
 lines = readlines("data/day03.txt")
-@btime solve($lines; partA=true)
-@btime solve($lines)
+println(solve(lines; part1=true))
+println(solve(lines))

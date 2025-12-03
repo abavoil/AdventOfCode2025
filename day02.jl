@@ -5,7 +5,7 @@ lines = readlines("data/day02_test.txt")
 # make this readable
 # x |> mapreduce (x |> split ',', vcat)
 #   |> map (x |> split '-' |> map parse(Int))
-intervals1bis(lines) = map(
+intervals(lines) = map(
     x -> parse.(Int, split(x, '-')),
     Iterators.flatmap(x -> split(x, ',', keepempty=false), lines)
 )
@@ -71,7 +71,7 @@ sum_a_to_b(a, b) = round(Int, (b * (b+1) - (a-1) * a) / 2)
 @test sum_a_to_b(1, 10) == 55
 @test sum_a_to_b(4, 11) == 60  # 55 - 6 + 11
 
-function invalid_ids!(invalid_ids, a, b; partA=false)
+function invalid_ids!(invalid_ids, a, b; part1=false)
     a_len = n_length(a)
     b_len = n_length(b)
     # TODO: invert the two loops, so that n_rep = 2 for part 1, cf. notes at the bottom
@@ -81,7 +81,7 @@ function invalid_ids!(invalid_ids, a, b; partA=false)
         min_n_rep = min_n_rep_(seq_len, a_len) # Smallest n such that n * seq_len >= a_len
         max_n_rep = max_n_rep_(seq_len, b_len) # Largest n such that n * seq_len <= b_len
         for n_rep in min_n_rep:max_n_rep
-            partA && n_rep != 2 && continue
+            part1 && n_rep != 2 && continue
             f = factor(seq_len, n_rep)
             min_seq = min_seq_(seq_len, n_rep, a; f=f, a_len=a_len)  # 1..1, first seq_len digits of a if min_seq * f < a, += 1 if min_sec * f < a
             max_seq = max_seq_(seq_len, n_rep, b; f=f, b_len=b_len)  # 9..9, first seq_len digits of b if max_seq * f > b, -= 1 if max_seq * f > b
@@ -105,18 +105,20 @@ invalid_ids(a, b) = invalid_ids!(Set{Int}(), a, b)
 @test invalid_ids(824824821, 824824827) == Set([824824824])
 @test invalid_ids(2121212118, 2121212124) == Set([2121212121])
 
-function solve(lines; partA=false)
+function solve(lines; part1=false)
     invalid_ids = Set{Int}()
     for (a, b) in intervals(lines)
-        invalid_ids!(invalid_ids, a, b; partA=partA)
+        invalid_ids!(invalid_ids, a, b; part1=part1)
     end
     return sum(invalid_ids)
 end
 
-@test solve(readlines("data/day02_test.txt"); partA=true) == 1227775554
+@test solve(readlines("data/day02_test.txt"); part1=true) == 1227775554
 @test solve(readlines("data/day02_test.txt")) == 4174379265
-@btime solve(readlines("data/day02.txt"); partA=true)
-@btime solve(readlines("data/day02.txt"))
+
+lines = readlines("data/day02.txt")
+println(solve(lines; part1=true))
+println(solve(lines))
 
 
 #= TODO

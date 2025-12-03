@@ -1,13 +1,12 @@
 using Test
-using BenchmarkTools
 
 function maximum_subnumber(line, out_len)
     a = parse.(Int, collect(line))
     in_len = length(a)
-    
+
     out = 0
     current_ind = 1  # Over the input digits
-    
+
     # We build a number with 'out_len' digits
     for remaining in out_len:-1:1
         limit = in_len - remaining + 1
@@ -35,14 +34,14 @@ function maximum_subnumber(line, out_len)
 end
 
 maximum_subnumber(n::Int, out_len) = maximum_subnumber(string(n), out_len)
-solve(lines; partA=false) = sum(maximum_subnumber(l, ifelse(partA, 2, 12)) for l in lines)
+solve(lines; part1=false) = sum(maximum_subnumber(l, ifelse(part1, 2, 12)) for l in lines)
 
-@test solve(readlines("data/day03_test.txt"); partA=true) == 357
+@test solve(readlines("data/day03_test.txt"); part1=true) == 357
 @test solve(readlines("data/day03_test.txt")) == 3121910778619
 
 lines = readlines("data/day03.txt")
-@btime solve($lines; partA=true)
-@btime solve($lines)
+println(solve(lines; part1=true))
+println(solve(lines))
 
 
 #= What worked:
