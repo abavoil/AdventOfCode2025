@@ -103,7 +103,7 @@ end
 function generate_table(results)
     header = "| File | Part 1 | Part 2 |\n|:---|:---:|:---:|\n"
     rows = map(results) do (file, t1, t2)
-        "| `$file` | $(format_duration(t1)) | $(format_duration(t2)) |"
+        "| [`$file`](./$file) | $(format_duration(t1)) | $(format_duration(t2)) |"
     end
     return header * join(rows, "\n")
 end
