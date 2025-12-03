@@ -83,11 +83,11 @@ function solve(lines; partA=false)
 	end
 end
 
-@test solve(readlines("data/day1_test.txt"); partA=true) == 3
-@test solve(readlines("data/day1_test.txt")) == 6
+@test solve(readlines("data/day01_test.txt"); partA=true) == 3
+@test solve(readlines("data/day01_test.txt")) == 6
 @test solve(lines_L; partA=true) == 3  # staying on 0 counts
 @test solve(lines_L) == 4
 @test solve(lines_R; partA=true) == 3
 @test solve(lines_R) == 4
-println(solve(readlines("data/day1.txt"); partA=true))
-println(solve(readlines("data/day1.txt")))
+println(solve(readlines("data/day01.txt"); partA=true))
+println(solve(readlines("data/day01.txt")))

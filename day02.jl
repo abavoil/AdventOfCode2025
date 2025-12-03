@@ -1,6 +1,6 @@
 using Test
 
-lines = readlines("data/day2_test.txt")
+lines = readlines("data/day02_test.txt")
 
 # make this readable
 # x |> mapreduce (x |> split ',', vcat)
@@ -113,10 +113,10 @@ function solve(lines; partA=false)
     return sum(invalid_ids)
 end
 
-@test solve(readlines("data/day2_test.txt"); partA=true) == 1227775554
-@test solve(readlines("data/day2_test.txt")) == 4174379265
-@btime solve(readlines("data/day2.txt"); partA=true)
-@btime solve(readlines("data/day2.txt"))
+@test solve(readlines("data/day02_test.txt"); partA=true) == 1227775554
+@test solve(readlines("data/day02_test.txt")) == 4174379265
+@btime solve(readlines("data/day02.txt"); partA=true)
+@btime solve(readlines("data/day02.txt"))
 
 
 #= TODO

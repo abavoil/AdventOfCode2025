@@ -42,9 +42,9 @@ function solve(lines; partA=false)
     return total
 end
 
-@test solve(readlines("data/day3_test.txt"); partA=true) == 357
-@test solve(readlines("data/day3_test.txt")) == 3121910778619
+@test solve(readlines("data/day03_test.txt"); partA=true) == 357
+@test solve(readlines("data/day03_test.txt")) == 3121910778619
 
-lines = readlines("data/day3.txt")
+lines = readlines("data/day03.txt")
 @btime solve($lines; partA=true)
 @btime solve($lines)
