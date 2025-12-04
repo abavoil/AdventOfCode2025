@@ -86,6 +86,5 @@ end
 @test solve(lines_R; part1=true) == 3
 @test solve(lines_R) == 4
 
-lines = readlines("data/day01.txt")
-println(solve(lines; part1=true))
-println(solve(lines))
+println(solve(readlines("data/day01.txt"); part1=true))
+println(solve(readlines("data/day01.txt")))

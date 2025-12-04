@@ -116,9 +116,8 @@ end
 @test solve(readlines("data/day02_test.txt"); part1=true) == 1227775554
 @test solve(readlines("data/day02_test.txt")) == 4174379265
 
-lines = readlines("data/day02.txt")
-println(solve(lines; part1=true))
-println(solve(lines))
+println(solve(readlines("data/day02.txt"); part1=true))
+println(solve(readlines("data/day02.txt")))
 
 
 #= TODO

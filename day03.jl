@@ -39,9 +39,8 @@ solve(lines; part1=false) = sum(maximum_subnumber(l, ifelse(part1, 2, 12)) for l
 @test solve(readlines("data/day03_test.txt"); part1=true) == 357
 @test solve(readlines("data/day03_test.txt")) == 3121910778619
 
-lines = readlines("data/day03.txt")
-println(solve(lines; part1=true))
-println(solve(lines))
+println(solve(readlines("data/day03.txt"); part1=true))
+println(solve(readlines("data/day03.txt")))
 
 
 #= What worked:
@@ -51,7 +50,7 @@ println(solve(lines))
 
 What didn't:
  - dynamic programming was not required : there is no downside of picking a 9 since we verify there is enough room left
- - funnily enough, usign UInt8 is as fast as Int, but it does allocate half (?!) as less bytes
+ - funnily enough, usign UInt8 is as fast as Int, but it does allocate half (?!) as many bytes
     a = parse.(UInt8, collect(line))
     max_val = 0x0
     if max_val == 0x9

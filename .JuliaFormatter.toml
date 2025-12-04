@@ -1,5 +1,4 @@
-style = "default"
-
+# style = "default"
 indent = 4
 # margin = 92
 margin = 999
@@ -34,7 +33,7 @@ normalize_line_endings = "unix"
 # join_lines_based_on_source = false
 join_lines_based_on_source = true
 # trailing_comma = true
-trailing_comma = nothing
+# trailing_comma = nothing
 # trailing_zero = true
 # indent_submodule = false
 # separate_kwargs_with_semicolon = false

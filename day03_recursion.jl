@@ -24,6 +24,5 @@ solve(lines; part1=false) = sum(maximum_subnumber(l, ifelse(part1, 2, 12)) for l
 @test solve(readlines("data/day03_test.txt"); part1=true) == 357
 @test solve(readlines("data/day03_test.txt")) == 3121910778619
 
-lines = readlines("data/day03.txt")
-println(solve(lines; part1=true))
-println(solve(lines))
+println(solve(readlines("data/day03.txt"); part1=true))
+println(solve(readlines("data/day03.txt")))
