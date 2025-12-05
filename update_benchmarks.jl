@@ -6,29 +6,28 @@
 # GOAL:
 #   Automatically discover `dayXY.jl` solutions, benchmark their `solve` function
 #   against `data/dayXY.txt`, and update a Markdown table in `README.md`.
+#   Only re-runs benchmarks if the source file content (hash) has changed.
 #
 # ARCHITECTURE:
-#   1. File Discovery: Uses strict Regex `^day\d{2}(_.*)?\.jl$` to match files 
-#      like `day01.jl` or `day03_optimized.jl`, but exclude `day02A.jl`.
-#   2. Data Loading: Loads input from `data/dayXY.txt` based on the filename number.
-#   3. Isolation: Each script is `include`d into a fresh `Module()` to prevent
-#      namespace collisions.
-#   4. Output Silencing: `println` is shadowed inside the module to suppress 
-#      terminal noise during file loading.
+#   1. File Discovery: Regex `^day\d{2}(_.*)?\.jl$`.
+#   2. Caching: Calculates SHA256 of the file. Reads existing README to see if
+#      hash matches. If yes, skips benchmark. Stores hash as HTML comment.
+#   3. Isolation: Modules + shadowed println.
+#   4. Output: Table format `| File | Part 1 | Part 2 |`. Memory info removed.
 #
 # CRITICAL IMPLEMENTATION DETAILS (Do not regress):
+#   0. DO NOT remove essential information from this summary.
 #   1. World Age / Julia 1.12+ Compatibility:
 #      - Use `solve_func = Core.eval(mod, :solve)` to retrieve the handle.
 #      - Use `Base.invokelatest(solve_func, ...)` to execute it.
 #   2. Output Formatting:
-#      - Benchmark results must match standard `@btime` output format:
-#        "Time (Alloc allocations: Memory)".
 #      - Table entries for filenames must be clickable relative links 
 #        (e.g., [`day01.jl`](./day01.jl)).
 # ==============================================================================
 
 using BenchmarkTools
 using Printf
+using SHA
 
 # --- Configuration ---
 README_FILE = "README.md"
@@ -65,24 +64,62 @@ function get_data_for_file(filename)
     return readlines(txt_path)
 end
 
-# mimic the output string of @btime
+function calculate_file_hash(filename)
+    return bytes2hex(open(sha256, filename))
+end
+
+# Simplified to just show time, no memory/allocs
 function format_benchmark_result(trial::BenchmarkTools.Trial)
     min_time = minimum(trial.times)
-    allocs = trial.allocs
-    memory = trial.memory
+    return BenchmarkTools.prettytime(min_time)
+end
 
-    time_str = BenchmarkTools.prettytime(min_time)
-    mem_str = BenchmarkTools.prettymemory(memory)
+# Parses the README to find existing results and hashes
+# Returns Dict: filename => (hash, part1_str, part2_str)
+function parse_existing_results()
+    if !isfile(README_FILE)
+        return Dict{String,Tuple{String,String,String}}()
+    end
 
-    return "$time_str ($allocs allocations: $mem_str)"
+    content = read(README_FILE, String)
+
+    # Extract content between markers
+    m_block = match(Regex("(?s)$MARKER_START(.*)$MARKER_END"), content)
+    if isnothing(m_block)
+        return Dict{String,Tuple{String,String,String}}()
+    end
+
+    table_block = m_block[1]
+    results = Dict{String,Tuple{String,String,String}}()
+
+    # Regex to capture: | [`filename`](...) <!-- sha:HASH --> | Result1 | Result2 |
+    # Explanation:
+    #   \[`([^`]+)`\]       -> Matches [`filename`] and captures filename
+    #   .*?<!-- sha:(\w+) --> -> Matches the invisible hash comment
+    #   .*?\|\s*(.*?)\s*\|    -> Matches Part 1 column
+    #   \s*(.*?)\s*\|         -> Matches Part 2 column
+    row_pattern = r"\|\s*\[`([^`]+)`\].*?<!-- sha:(\w+) -->\s*\|\s*(.*?)\s*\|\s*(.*?)\s*\|"
+
+    for line in split(table_block, '\n')
+        m_row = match(row_pattern, line)
+        if !isnothing(m_row)
+            fname = m_row[1]
+            fhash = m_row[2]
+            res1 = m_row[3]
+            res2 = m_row[4]
+            results[fname] = (fhash, res1, res2)
+        end
+    end
+
+    return results
 end
 
 function run_benchmark(filename)
-    println("\nProcessing $filename ...")
+    println("  -> Benchmarking $filename (Fresh run)...")
 
     lines_data = get_data_for_file(filename)
     if isnothing(lines_data)
-        return nothing
+        return ("Err", "Err")
     end
 
     mod = Module()
@@ -96,44 +133,46 @@ function run_benchmark(filename)
         Base.include(mod, filename)
     catch e
         @error "Error loading $filename" exception = e
-        return nothing
+        return ("LoadErr", "LoadErr")
     end
 
-    # Retrieve 'solve' safely
     solve_func = try
         Core.eval(mod, :solve)
     catch
         @warn "Function 'solve' not found in $filename"
-        return nothing
+        return ("NoSolve", "NoSolve")
     end
 
     # --- Part 1 ---
-    print("  -> Benchmarking Part 1... ")
+    print("     Part 1... ")
     str1 = try
         b1 = @benchmark Base.invokelatest($solve_func, $lines_data; part1=true)
         format_benchmark_result(b1)
     catch e
-        "Failed: $(e)"
+        "Fail"
     end
     println(str1)
 
     # --- Part 2 ---
-    print("  -> Benchmarking Part 2... ")
+    print("     Part 2... ")
     str2 = try
         b2 = @benchmark Base.invokelatest($solve_func, $lines_data; part1=false)
         format_benchmark_result(b2)
     catch e
-        "Failed: $(e)"
+        "Fail"
     end
     println(str2)
 
     return (str1, str2)
 end
 
-function generate_table(results)
+function generate_table(results_list)
+    # results_list contains tuples: (filename, hash, result1, result2)
     header = "| File | Part 1 | Part 2 |\n|:---|:---|:---|\n"
-    rows = map(results) do (file, s1, s2)
-        "| [`$file`](./$file) | $s1 | $s2 |"
+
+    rows = map(results_list) do (file, fhash, s1, s2)
+        # We inject the hash as an HTML comment immediately after the link
+        "| [`$file`](./$file) <!-- sha:$fhash --> | $s1 | $s2 |"
     end
     return header * join(rows, "\n")
 end
@@ -164,17 +203,33 @@ end
 
 function main()
     files = get_target_files()
-    results = []
+    existing_data = parse_existing_results() # Dict(filename => (hash, r1, r2))
+
+    final_results = [] # List of (filename, hash, r1, r2)
+
+    println("Checking $(length(files)) files against cache...")
 
     for file in files
-        res = run_benchmark(file)
-        if !isnothing(res)
-            push!(results, (file, res[1], res[2]))
+        current_hash = calculate_file_hash(file)
+
+        # Check if file exists in cache and hash matches
+        if haskey(existing_data, file)
+            (old_hash, old_r1, old_r2) = existing_data[file]
+
+            if old_hash == current_hash
+                println("  [SKIP] $file (No changes detected)")
+                push!(final_results, (file, current_hash, old_r1, old_r2))
+                continue
+            end
         end
+
+        # If we are here: File is new OR Hash mismatch
+        (r1, r2) = run_benchmark(file)
+        push!(final_results, (file, current_hash, r1, r2))
     end
 
-    if !isempty(results)
-        table = generate_table(results)
+    if !isempty(final_results)
+        table = generate_table(final_results)
         update_readme(table)
     else
         println("No results to write.")
