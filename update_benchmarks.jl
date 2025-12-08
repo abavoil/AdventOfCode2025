@@ -35,7 +35,7 @@ DATA_DIR = "data"
 MARKER_START = "<!-- BENCHMARK_TABLE_BEGIN -->"
 MARKER_END = "<!-- BENCHMARK_TABLE_END -->"
 
-FILES_TO_EXCLUDE = ["day03_ben.jl"]
+FILES_TO_EXCLUDE = []
 
 # ---------------------
 
