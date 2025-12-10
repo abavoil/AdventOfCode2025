@@ -4,7 +4,7 @@ const Point = NTuple{3,Int}
 
 distance(points, i, j) = sum((points[i] .- points[j]) .^ 2)
 
-function minheap_find(parent, x)
+function DSU_find(parent, x)  # Disjoint Set Union
     root = x
     while parent[root] != root  # find root
         root = parent[root]
@@ -17,9 +17,9 @@ function minheap_find(parent, x)
     return root
 end
 
-function minheap_union(parent, size, x, y)
-    x = minheap_find(parent, x)
-    y = minheap_find(parent, y)
+function DSU_union_size(parent, size, x, y)
+    x = DSU_find(parent, x)
+    y = DSU_find(parent, y)
 
     if x == y
         return
@@ -59,8 +59,8 @@ function solve(lines; part1=false)
         ordering = partialsortperm(eachindex(dists), start:stop; by=i -> dists[i])
         for (pair_order, pair_ind) in enumerate(ordering)
             (i, j) = Tuple(CartesianIndices(dists)[pair_ind])
-            minheap_union(parent_, size_, i, j)
-            if stop_condition(size_[minheap_find(parent_, i)], pair_order)
+            DSU_union_size(parent_, size_, i, j)
+            if stop_condition(size_[DSU_find(parent_, i)], pair_order)
                 if part1
                     return prod(partialsort(unique(size_), 1:3; rev=true))
                 else

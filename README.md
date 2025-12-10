@@ -21,5 +21,9 @@ lines = readlines("data/dayXY.txt")
 | [`day05.jl`](./day05.jl) <!-- sha:d9d95436d0172d5a45d31b2ac91dfe6683b3941c3e57fdf139e1f57763590c9f --> | 70.375 μs | 59.667 μs |
 | [`day06.jl`](./day06.jl) <!-- sha:d432e050397a0d79c44e72e29419ed27aa5b387dfee0494b0f49b04f0ad7a1b0 --> | 54.916 μs | 50.208 μs |
 | [`day07.jl`](./day07.jl) <!-- sha:27c888d1d5e151e45a8bab62ebaa77367c0fe307544f77b675f25730223e15f8 --> | 12.500 μs | 13.125 μs |
-| [`day08.jl`](./day08.jl) <!-- sha:a88120f183c31412c06ab3e7ce1e84bee23f818fcfe249fb001bfaa1d15ab32f --> | 5.396 ms | 5.784 ms |
+| [`day08.jl`](./day08.jl) <!-- sha:f9aed5a4af4c491dd2a45fe9385d265e889512487a2343b709d9213024556cf6 --> | 5.221 ms | 5.384 ms |
+| [`day09.jl`](./day09.jl) <!-- sha:da5b56d44585357b6b220592c8c81ca7e80186ba223eeb88c766dce0c2e6bdf6 --> | 303.250 μs | 45.785 ms |
+| **Total** | **6.460 ms** | **56.258 ms** |
 <!-- BENCHMARK_TABLE_END -->
+
+<!-- TODO: for each part, compute sum(min(day) for day in days) -->

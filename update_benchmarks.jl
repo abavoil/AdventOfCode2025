@@ -14,6 +14,7 @@
 #      hash matches. If yes, skips benchmark. Stores hash as HTML comment.
 #   3. Isolation: Modules + shadowed println.
 #   4. Output: Table format `| File | Part 1 | Part 2 |`. Memory info removed.
+#              Includes a Total Sum row at the bottom.
 #
 # CRITICAL IMPLEMENTATION DETAILS (Do not regress):
 #   0. DO NOT remove essential information from this summary.
@@ -74,6 +75,46 @@ function format_benchmark_result(trial::BenchmarkTools.Trial)
     return BenchmarkTools.prettytime(min_time)
 end
 
+# Helper to parse "123.4 μs" back to nanoseconds (Float64) for summation
+function parse_time_ns(t_str::String)
+    s = strip(t_str)
+    # Handle error strings or empty strings
+    if s in ["Fail", "Err", "LoadErr", "NoSolve"] || isempty(s)
+        return 0.0
+    end
+
+    # Regex to capture number and unit. 
+    # Matches "123.45" and "μs" / "ms" / "s" / "ns"
+    # Handles both Greek mu (U+03BC) and Micro Sign (U+00B5)
+    m = match(r"([\d\.]+)\s*([a-zµμ]+)", s)
+    if isnothing(m)
+        return 0.0
+    end
+
+    val = try
+        parse(Float64, m[1])
+    catch
+        0.0
+    end
+    unit = m[2]
+
+    mult = if unit == "ns"
+        1.0
+    elseif unit == "μs" || unit == "µs"
+        1000.0
+    elseif unit == "ms"
+        1e6
+    elseif unit == "s"
+        1e9
+    elseif unit == "m"
+        60.0 * 1e9
+    else
+        0.0
+    end
+
+    return val * mult
+end
+
 # Parses the README to find existing results and hashes
 # Returns Dict: filename => (hash, part1_str, part2_str)
 function parse_existing_results()
@@ -93,11 +134,6 @@ function parse_existing_results()
     results = Dict{String,Tuple{String,String,String}}()
 
     # Regex to capture: | [`filename`](...) <!-- sha:HASH --> | Result1 | Result2 |
-    # Explanation:
-    #   \[`([^`]+)`\]       -> Matches [`filename`] and captures filename
-    #   .*?<!-- sha:(\w+) --> -> Matches the invisible hash comment
-    #   .*?\|\s*(.*?)\s*\|    -> Matches Part 1 column
-    #   \s*(.*?)\s*\|         -> Matches Part 2 column
     row_pattern = r"\|\s*\[`([^`]+)`\].*?<!-- sha:(\w+) -->\s*\|\s*(.*?)\s*\|\s*(.*?)\s*\|"
 
     for line in split(table_block, '\n')
@@ -170,11 +206,25 @@ function generate_table(results_list)
     # results_list contains tuples: (filename, hash, result1, result2)
     header = "| File | Part 1 | Part 2 |\n|:---|:---|:---|\n"
 
+    sum_p1 = 0.0
+    sum_p2 = 0.0
+
     rows = map(results_list) do (file, fhash, s1, s2)
+        # Accumulate totals
+        sum_p1 += parse_time_ns(s1)
+        sum_p2 += parse_time_ns(s2)
+
         # We inject the hash as an HTML comment immediately after the link
         "| [`$file`](./$file) <!-- sha:$fhash --> | $s1 | $s2 |"
     end
-    return header * join(rows, "\n")
+
+    # Format the totals
+    total_str1 = BenchmarkTools.prettytime(sum_p1)
+    total_str2 = BenchmarkTools.prettytime(sum_p2)
+
+    total_row = "| **Total** | **$total_str1** | **$total_str2** |"
+
+    return header * join(rows, "\n") * "\n" * total_row
 end
 
 function update_readme(table_content)
