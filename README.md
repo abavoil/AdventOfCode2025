@@ -5,8 +5,10 @@ Times are measured using BenchmarkTools.jl and julia 1.12 on a MacBook Air M2 wi
 ```{julia}
 lines = readlines("data/dayXY.txt")
 @btime solve(lines; part1 = true)
-@btime solve(lines)
+@btime solve(lines).
 ```
+
+Total times only consider the best time of each day.
 
 <!-- BENCHMARK_TABLE_BEGIN -->
 | File | Part 1 | Part 2 |
@@ -22,8 +24,8 @@ lines = readlines("data/dayXY.txt")
 | [`day06.jl`](./day06.jl) <!-- sha:d432e050397a0d79c44e72e29419ed27aa5b387dfee0494b0f49b04f0ad7a1b0 --> | 54.916 μs | 50.208 μs |
 | [`day07.jl`](./day07.jl) <!-- sha:27c888d1d5e151e45a8bab62ebaa77367c0fe307544f77b675f25730223e15f8 --> | 12.500 μs | 13.125 μs |
 | [`day08.jl`](./day08.jl) <!-- sha:f9aed5a4af4c491dd2a45fe9385d265e889512487a2343b709d9213024556cf6 --> | 5.221 ms | 5.384 ms |
-| [`day09.jl`](./day09.jl) <!-- sha:da5b56d44585357b6b220592c8c81ca7e80186ba223eeb88c766dce0c2e6bdf6 --> | 303.250 μs | 45.785 ms |
-| **Total** | **6.460 ms** | **56.258 ms** |
+| [`day09.jl`](./day09.jl) <!-- sha:da5b56d44585357b6b220592c8c81ca7e80186ba223eeb88c766dce0c2e6bdf6 --> | 299.209 μs | 45.887 ms |
+| **Total (Best)** | **6.027 ms** | **52.261 ms** |
 <!-- BENCHMARK_TABLE_END -->
 
 <!-- TODO: for each part, compute sum(min(day) for day in days) -->

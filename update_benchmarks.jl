@@ -14,7 +14,7 @@
 #      hash matches. If yes, skips benchmark. Stores hash as HTML comment.
 #   3. Isolation: Modules + shadowed println.
 #   4. Output: Table format `| File | Part 1 | Part 2 |`. Memory info removed.
-#              Includes a Total Sum row at the bottom.
+#              Includes a Total Sum row (Sum of BEST time per Day/Part).
 #
 # CRITICAL IMPLEMENTATION DETAILS (Do not regress):
 #   0. DO NOT remove essential information from this summary.
@@ -24,6 +24,9 @@
 #   2. Output Formatting:
 #      - Table entries for filenames must be clickable relative links 
 #        (e.g., [`day01.jl`](./day01.jl)).
+#   3. Total Calculation:
+#      - If multiple files exist for the same day (e.g. day01.jl, day01_opt.jl),
+#        the Total row must sum only the MINIMUM time for that day.
 # ==============================================================================
 
 using BenchmarkTools
@@ -85,7 +88,6 @@ function parse_time_ns(t_str::String)
 
     # Regex to capture number and unit. 
     # Matches "123.45" and "μs" / "ms" / "s" / "ns"
-    # Handles both Greek mu (U+03BC) and Micro Sign (U+00B5)
     m = match(r"([\d\.]+)\s*([a-zµμ]+)", s)
     if isnothing(m)
         return 0.0
@@ -206,23 +208,52 @@ function generate_table(results_list)
     # results_list contains tuples: (filename, hash, result1, result2)
     header = "| File | Part 1 | Part 2 |\n|:---|:---|:---|\n"
 
-    sum_p1 = 0.0
-    sum_p2 = 0.0
+    # Dictionaries to track the Minimum time (ns) per Day Number
+    # Key: Day Number (Int), Value: Time in nanoseconds
+    min_p1_by_day = Dict{Int,Float64}()
+    min_p2_by_day = Dict{Int,Float64}()
 
     rows = map(results_list) do (file, fhash, s1, s2)
-        # Accumulate totals
-        sum_p1 += parse_time_ns(s1)
-        sum_p2 += parse_time_ns(s2)
+        # 1. Parse times
+        t1_ns = parse_time_ns(s1)
+        t2_ns = parse_time_ns(s2)
+
+        # 2. Extract Day Number to group results
+        # e.g. "day02.jl" -> 2, "day02_opt.jl" -> 2
+        m = match(r"day(\d+)", file)
+        if !isnothing(m)
+            day_num = parse(Int, m[1])
+
+            # Update min for Part 1 (only if valid time > 0)
+            if t1_ns > 0.0
+                current = get(min_p1_by_day, day_num, Inf)
+                if t1_ns < current
+                    min_p1_by_day[day_num] = t1_ns
+                end
+            end
+
+            # Update min for Part 2
+            if t2_ns > 0.0
+                current = get(min_p2_by_day, day_num, Inf)
+                if t2_ns < current
+                    min_p2_by_day[day_num] = t2_ns
+                end
+            end
+        end
 
         # We inject the hash as an HTML comment immediately after the link
         "| [`$file`](./$file) <!-- sha:$fhash --> | $s1 | $s2 |"
     end
 
-    # Format the totals
-    total_str1 = BenchmarkTools.prettytime(sum_p1)
-    total_str2 = BenchmarkTools.prettytime(sum_p2)
+    # Sum of the BEST times for each day
+    total_p1_ns = sum(values(min_p1_by_day))
+    total_p2_ns = sum(values(min_p2_by_day))
 
-    total_row = "| **Total** | **$total_str1** | **$total_str2** |"
+    # Format the totals
+    total_str1 = BenchmarkTools.prettytime(total_p1_ns)
+    total_str2 = BenchmarkTools.prettytime(total_p2_ns)
+
+    total_row = "| **Total (Best)** | **$total_str1** | **$total_str2** |"
 
     return header * join(rows, "\n") * "\n" * total_row
 end
