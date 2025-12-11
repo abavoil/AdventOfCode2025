@@ -253,7 +253,7 @@ function generate_table(results_list)
     total_str1 = BenchmarkTools.prettytime(total_p1_ns)
     total_str2 = BenchmarkTools.prettytime(total_p2_ns)
 
-    total_row = "| **Total (Best)** | **$total_str1** | **$total_str2** |"
+    total_row = "| **Total (Best of each day)** | **$total_str1** | **$total_str2** |"
 
     return header * join(rows, "\n") * "\n" * total_row
 end
