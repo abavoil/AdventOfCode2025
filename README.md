@@ -26,7 +26,8 @@ Total times only consider the best time of each day.
 | [`day08.jl`](./day08.jl) <!-- sha:f9aed5a4af4c491dd2a45fe9385d265e889512487a2343b709d9213024556cf6 --> | 5.221 ms | 5.384 ms |
 | [`day09.jl`](./day09.jl) <!-- sha:da5b56d44585357b6b220592c8c81ca7e80186ba223eeb88c766dce0c2e6bdf6 --> | 299.209 μs | 45.887 ms |
 | [`day11.jl`](./day11.jl) <!-- sha:aac63750d129eadf0ce454267f9983c5264bb942ea82f5838171e44cfdf0364a --> | 19.792 μs | 39.000 μs |
-| **Total (Best of each day)** | **6.046 ms** | **52.300 ms** |
+| [`day12.jl`](./day12.jl) <!-- sha:fedae0b35d8a81ed602fd823f9c600cc58b704ffe19366bea38af167425a690f --> | 8.028 μs | Fail |
+| **Total (Best of each day)** | **6.054 ms** | **52.300 ms** |
 <!-- BENCHMARK_TABLE_END -->
 
 <!-- TODO: for each part, compute sum(min(day) for day in days) -->
