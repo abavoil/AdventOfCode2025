@@ -1,60 +1,71 @@
-using Test
+const DIRECTIONS = [
+    (-1, -1), (-1, 0), (-1, 1),
+    (0, -1), (0, 1),
+    (1, -1), (1, 0), (1, 1),
+]
 
-function isroll(room, i, j; n=size(room, 1), m=size(room, 2))
-    if i < 1 || i > n
-        return false
-    end
-    
-    if j < 1 || j > m
-        return false
-    end
-    
-    return room[i, j] == '@'
-end
+function parse(lines)
+    n = length(lines)
+    m = length(lines[1])
+    is_roll = falses(n + 2, m + 2)
+    n_neigh = zeros(UInt8, n + 2, m + 2)
 
-function isforkliftable(room, i, j; kwargs...)
-    rolls_around = 0
-    for di in [-1, 0, 1], dj in [-1, 0, 1]
-        if di == 0 && dj == 0
-            continue
-        end
-        if isroll(room, i+di, j+dj; kwargs...)
-            rolls_around += 1
-        end
-    end
+    for (i, line) in enumerate(lines)
+        for (j, byte) in enumerate(codeunits(line))
 
-    return rolls_around < 4
-end
+            byte == UInt8('@') || continue
 
-function forklift_coordinates!(next_room, room; kwargs...)
-    forklifted_count = 0
-    for i in axes(room, 1), j in axes(room, 2)
-        if isroll(room, i, j; kwargs...) && isforkliftable(room, i, j; kwargs...)
-            next_room[i, j] = 'x'
-            forklifted_count += 1
+            is_roll[i+1, j+1] = true
+            for (di, dj) in DIRECTIONS
+                di == dj == 0 && continue
+                n_neigh[i+di+1, j+dj+1] += 1
+            end
+
         end
     end
-    room .= next_room
-    return forklifted_count
+    return n, m, is_roll, n_neigh
 end
 
-function solve(lines; part1=false)
-    room = permutedims(reduce(hcat, collect.(lines)))
-    next_room = copy(room)
-    n, m = size(room)
-    count = 0
-    while true
-        iteration_count = forklift_coordinates!(next_room, room; n=n, m=m)
-        count += iteration_count
-        if iteration_count == 0 || part1
-            break
-        end
+function part1(lines)
+    n, m, is_roll, n_neigh = parse(lines)
+
+    nb_removed_rolls = 0
+    for i in 1:n, j in 1:m
+        is_roll[i+1, j+1] || continue
+        n_neigh[i+1, j+1] < 4 || continue
+        nb_removed_rolls += 1
     end
-    return count
+    return nb_removed_rolls
 end
 
-@test solve(readlines("data/day04_test.txt"); part1=true) == 13
-@test solve(readlines("data/day04_test.txt")) == 43
+function part2(lines)
+    n, m, is_roll, n_neigh = parse(lines)
 
-println(solve(readlines("data/day04.txt"); part1=true))
-println(solve(readlines("data/day04.txt")))
+    stack = fill((0, 0), 0)
+
+    for i in 1:n, j in 1:m
+        is_roll[i+1, j+1] || continue
+        n_neigh[i+1, j+1] < 4 || continue
+        push!(stack, (i, j))
+    end
+
+
+    nb_removed_rolls = 0
+    while !isempty(stack)
+        i, j = pop!(stack)
+        is_roll[i+1, j+1] || continue
+        n_neigh[i+1, j+1] < 4 || continue
+
+        is_roll[i+1, j+1] = false
+        for (di, dj) in DIRECTIONS
+            n_neigh[i+di+1, j+dj+1] -= 1
+            push!(stack, (i + di, j + dj))
+        end
+        nb_removed_rolls += 1
+    end
+    return nb_removed_rolls
+end
+
+lines = readlines("data/day04.txt")
+@btime part1(lines)
+@btime part2(lines)
