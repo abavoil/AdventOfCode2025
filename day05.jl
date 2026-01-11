@@ -1,5 +1,13 @@
 using Test
 
+function parse_int(bytes)
+    n = 0
+    for byte in bytes
+        n = 10n + byte - 0x30
+    end
+    return n
+end
+
 function parse_lines_slower(lines)
     sep = findfirst(isempty, lines)
     intervals = map(x -> parse.(Int, split(x, '-')), lines[1:sep-1])
@@ -8,23 +16,21 @@ function parse_lines_slower(lines)
 end
 
 function parse_lines(lines)
-    # Is very slightly faster
     sep = findfirst(isempty, lines)
-    n = length(lines)
 
-    intervals = Vector{NTuple{2,Int}}(undef, sep - 1)
-    @inbounds for i in 1:sep-1
-        i_sep = findfirst('-', lines[i])
-        a = parse(Int, SubString(lines[i], 1, i_sep - 1))
-        b = parse(Int, SubString(lines[i], i_sep + 1))
+    intervals = fill((-1, -1), sep - 1)
+    for (i, line) in enumerate(@view lines[1:sep-1])
+        bytes = codeunits(line)
+        int_sep = findfirst(==(UInt8('-')), bytes)
+        a = parse_int(codeunits(@view line[1:int_sep-1]))
+        b = parse_int(codeunits(@view line[int_sep+1:end]))
         intervals[i] = (a, b)
     end
 
-    IDs = Vector{Int}(undef, n - sep)
-    @inbounds for i in sep+1:n
-        IDs[i-sep] = parse(Int, lines[i])
+    IDs = fill(-1, length(lines) - sep)
+    for (i, line) in enumerate(@view lines[sep+1:end])
+        IDs[i] = parse_int(codeunits(line))
     end
-
     return intervals, IDs
 end
 
@@ -91,6 +97,7 @@ function parse_lines_fast(lines::Vector{String})
 
     return intervals, ids
 end
+
 
 function solve_part1(intervals, IDs)
     #=
