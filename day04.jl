@@ -4,7 +4,7 @@ const DIRECTIONS = [
     (1, -1), (1, 0), (1, 1),
 ]
 
-function parse(lines)
+function parse_(lines)
     n = length(lines)
     m = length(lines[1])
     is_roll = falses(n + 2, m + 2)
@@ -27,7 +27,7 @@ function parse(lines)
 end
 
 function part1(lines)
-    n, m, is_roll, n_neigh = parse(lines)
+    n, m, is_roll, n_neigh = parse_(lines)
 
     nb_removed_rolls = 0
     for i in 1:n, j in 1:m
@@ -39,7 +39,7 @@ function part1(lines)
 end
 
 function part2(lines)
-    n, m, is_roll, n_neigh = parse(lines)
+    n, m, is_roll, n_neigh = parse_(lines)
 
     stack = fill((0, 0), 0)
 
