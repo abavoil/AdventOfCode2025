@@ -1,7 +1,11 @@
 using Test
 
 function parse_rotation(rot)
-    n = parse(Int, rot[2:end])
+    n = 0
+    for (i, byte) in enumerate(codeunits(rot))
+        i == 1 && continue
+        n = 10n + byte - 0x30
+    end
     if rot[1] == 'L'
         n = -n
     end
@@ -11,8 +15,8 @@ end
 function solve1(lines)
     zero_count = 0
     p = 50
-    for l in lines
-        n = parse_rotation(l)
+    for line in lines
+        n = parse_rotation(line)
         p = mod(p + n, 100)
         zero_count += (p == 0)
     end
@@ -79,12 +83,15 @@ function solve(lines; part1=false)
     end
 end
 
-@test solve(readlines("data/day01_test.txt"); part1=true) == 3
-@test solve(readlines("data/day01_test.txt")) == 6
 @test solve(lines_L; part1=true) == 3  # staying on 0 counts
 @test solve(lines_L) == 4
 @test solve(lines_R; part1=true) == 3
 @test solve(lines_R) == 4
 
-println(solve(readlines("data/day01.txt"); part1=true))
-println(solve(readlines("data/day01.txt")))
+test_lines = readlines("data/day01_test.txt")
+@test solve(test_lines; part1=true) == 3
+@test solve(test_lines) == 6
+
+lines = readlines("data/day01.txt")
+println(solve(lines; part1=true))
+println(solve(lines))

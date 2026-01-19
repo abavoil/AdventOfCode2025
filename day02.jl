@@ -1,20 +1,48 @@
 using Test
 
-lines = readlines("data/day02_test.txt")
-
 # make this readable
 # x |> mapreduce (x |> split ',', vcat)
 #   |> map (x |> split '-' |> map parse(Int))
-intervals(lines) = map(
-    x -> parse.(Int, split(x, '-')),
-    Iterators.flatmap(x -> split(x, ',', keepempty=false), lines)
-)
+function intervals_slow(lines)
+    map(
+        x -> Tuple(parse.(Int, split(x, '-'))),
+        Iterators.flatmap(x -> split(x, ','; keepempty=false), lines),
+    )
+end
+
+function intervals(lines)
+    intervals = fill((0, 0), 0)
+
+    for line in lines
+        bytes = codeunits(line)
+        i = 1
+        while i < length(bytes)
+            n1 = 0
+            while bytes[i] != UInt8('-')
+                n1 = 10n1 + bytes[i] - 0x30
+                i += 1
+            end
+            i += 1
+            n2 = 0
+            while i <= length(bytes) && bytes[i] != UInt8(',')
+                n2 = 10n2 + bytes[i] - 0x30
+                i += 1
+            end
+            i += 1
+            push!(intervals, (n1, n2))
+        end
+    end
+
+    return intervals
+end
+
+
 
 n_length(n) = floor(Int, log10(n)) + 1
 @test n_length(123) == 3
 @test n_length(100) == 3
 
-factor(seq_len, n_rep) = sum(10^(seq_len*i) for i in 0:n_rep-1)
+factor(seq_len, n_rep) = sum(10^(seq_len * i) for i in 0:n_rep-1)
 @test factor(1, 3) == 111
 @test factor(3, 2) == 1001
 @test factor(2, 3) == 10101
@@ -67,7 +95,7 @@ end
 @test max_seq_(3, 2, 987987) == 987
 @test max_seq_(3, 2, 987986) == 986
 
-sum_a_to_b(a, b) = round(Int, (b * (b+1) - (a-1) * a) / 2)
+sum_a_to_b(a, b) = round(Int, (b * (b + 1) - (a - 1) * a) / 2)
 @test sum_a_to_b(1, 10) == 55
 @test sum_a_to_b(4, 11) == 60  # 55 - 6 + 11
 
@@ -113,11 +141,14 @@ function solve(lines; part1=false)
     return sum(invalid_ids)
 end
 
-@test solve(readlines("data/day02_test.txt"); part1=true) == 1227775554
-@test solve(readlines("data/day02_test.txt")) == 4174379265
 
-println(solve(readlines("data/day02.txt"); part1=true))
-println(solve(readlines("data/day02.txt")))
+test_lines = readlines("data/day02_test.txt")
+@test solve(test_lines; part1=true) == 1227775554
+@test solve(test_lines) == 4174379265
+
+lines = readlines("data/day02.txt")
+println(solve(lines; part1=true))
+println(solve(lines))
 
 
 #= TODO

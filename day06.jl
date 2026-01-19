@@ -1,6 +1,6 @@
 using Test
 
-function part1_(lines)
+function part1_old(lines)
     vals = permutedims(reduce(hcat, parse.(Int, split(line)) for line in lines[1:end-1]))
     operations = map(s -> ifelse(only(s) == '+', +, *), split(lines[end]))
     # println(split(lines[end]))
@@ -17,11 +17,11 @@ function solve(lines; part1=false)
     bytes = permutedims(reduce(hcat, codeunits.(lines)))
     block_starts = findall(b -> b == UInt8('+') || b == UInt8('*'), codeunits(last(lines)))
     push!(block_starts, size(bytes, 2) + 1)
-    
+
     total_sum = 0
-    for block_i in 1:length(block_starts) - 1
+    for block_i in 1:length(block_starts)-1
         block_start = block_starts[block_i]
-        block_end = block_starts[block_i + 1] - 1
+        block_end = block_starts[block_i+1] - 1
 
         block = @view bytes[1:end-1, block_start:block_end]
         plus = bytes[end, block_start] == UInt8('+')
@@ -42,7 +42,7 @@ function solve(lines; part1=false)
     return total_sum
 end
 
-test_lines = readlines("data/day06_test.txt") 
+test_lines = readlines("data/day06_test.txt")
 @test solve(test_lines; part1=true) == 4277556
 @test solve(test_lines) == 3263827
 
@@ -52,7 +52,7 @@ println(solve(lines))
 
 
 #= TODO:
- - write twice the looping over the block depending on part 1/2 to not have this `bytes` matrix,
- - or have some non-allocating wrapper around `lines`
+ - have some non-allocating wrapper around `lines`
+like a get_byte_at(i, j)
 
 =#

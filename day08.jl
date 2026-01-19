@@ -31,6 +31,8 @@ function DSU_union_size(parent, size, x, y)
 
     parent[y] = x
     size[x] += size[y]
+
+    return size[x]
 end
 
 # 9 gives 24
@@ -59,8 +61,7 @@ function solve(lines; part1=false)
         ordering = partialsortperm(eachindex(dists), start:stop; by=i -> dists[i])
         for (pair_order, pair_ind) in enumerate(ordering)
             (i, j) = Tuple(CartesianIndices(dists)[pair_ind])
-            DSU_union_size(parent_, size_, i, j)
-            if stop_condition(size_[DSU_find(parent_, i)], pair_order)
+            if stop_condition(DSU_union_size(parent_, size_, i, j), pair_order)
                 if part1
                     return prod(partialsort(unique(size_), 1:3; rev=true))
                 else
@@ -82,7 +83,7 @@ println(solve(lines))
 
 #=
 
-Optimization:
+Optimization ideas:
  - instead of chunking the loop over the ranked pairs, chunk over the distances:
    1. from 0 to 100
    2. from 100 to 1000

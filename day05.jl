@@ -1,6 +1,6 @@
 using Test
 
-function parse_int(bytes)
+@inline function parse_int(bytes)
     n = 0
     for byte in bytes
         n = 10n + byte - 0x30
@@ -19,7 +19,7 @@ function parse_lines(lines)
     sep = findfirst(isempty, lines)
 
     intervals = fill((-1, -1), sep - 1)
-    for (i, line) in enumerate(@view lines[1:sep-1])
+    @inbounds for (i, line) in enumerate(@view lines[1:sep-1])
         bytes = codeunits(line)
         int_sep = findfirst(==(UInt8('-')), bytes)
         a = parse_int(codeunits(@view line[1:int_sep-1]))
@@ -28,7 +28,7 @@ function parse_lines(lines)
     end
 
     IDs = fill(-1, length(lines) - sep)
-    for (i, line) in enumerate(@view lines[sep+1:end])
+    @inbounds for (i, line) in enumerate(@view lines[sep+1:end])
         IDs[i] = parse_int(codeunits(line))
     end
     return intervals, IDs
@@ -48,7 +48,7 @@ function parse_lines_fast(lines::Vector{String})
     # 2. Pre-allocate results
     # We know exactly how many elements we need
     n_intervals = sep_idx - 1
-    intervals = Vector{Vector{Int}}(undef, n_intervals)
+    intervals = Vector{Tuple{Int,Int}}(undef, n_intervals)
 
     n_ids = length(lines) - sep_idx
     ids = Vector{Int}(undef, n_ids)
@@ -81,7 +81,7 @@ function parse_lines_fast(lines::Vector{String})
             idx += 1
         end
 
-        intervals[i] = [num1, val]
+        intervals[i] = (num1, val)
     end
 
     # 4. Parse IDs
@@ -99,7 +99,7 @@ function parse_lines_fast(lines::Vector{String})
 end
 
 
-function solve_part1(intervals, IDs)
+function solve_part1_log(intervals, IDs)
     #=
     sort IDs
     (sort intervals to better initialize bisection on ID1)
@@ -146,6 +146,26 @@ function solve_part1_naive(intervals, IDs)
     return count
 end
 
+function solve_part1(intervals, IDs)
+    sort!(intervals)
+    sort!(IDs)
+    n_ids = length(IDs)
+
+    count = 0
+    i_id = 1
+    @inbounds for (a, b) in intervals
+        while i_id <= n_ids && IDs[i_id] < a
+            i_id += 1
+        end
+
+        while i_id <= n_ids && IDs[i_id] <= b
+            count += 1
+            i_id += 1
+        end
+    end
+    return count
+end
+
 function solve_part2(intervals)
     intervals = sort!(intervals)
 
@@ -170,16 +190,21 @@ function solve(lines; part1=false)
     end
 end
 
-@test solve(readlines("data/day05_test.txt"); part1=true) == 3
-@test solve(readlines("data/day05_test.txt")) == 14
+test_lines = readlines("data/day05_test.txt")
+@test solve(test_lines; part1=true) == 3
+@test solve(test_lines) == 14
 
-println(solve(readlines("data/day05.txt"); part1=true))
-println(solve(readlines("data/day05.txt")))
+lines = readlines("data/day05.txt")
+println(solve(lines; part1=true))
+println(solve(lines))
 
 
 #=
+Parsing optimisation:
+ - have only @inbounds for loops like gemnini's version ?
+
 - It is not faster to warm-start binary search
-- 3 liner parse was already very good
+- Parse integers from bytes instead of parse(Int, str) ~~3 liner parse was already very good~~
 - SubString is NOT faster but saves memory allocations
 - Do not specify limit in split, it is just as fast without
 - do not save lines[i] to line, just as fast to call it 3 times

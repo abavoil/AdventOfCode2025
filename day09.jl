@@ -191,7 +191,7 @@ for i in eachindex(test_points)
     end
 end
 
-function solve(lines; part1=false)
+function solve_testable(lines; part1=false)
     points = [Point(parse.(Int, split(line, ','))) for line in lines]
     min_i, max_i = extrema(x -> x[1], points)
     min_j, max_j = extrema(x -> x[2], points)
@@ -250,23 +250,6 @@ function solve(lines; part1=false)
     return max_area
 end
 
-test_lines = readlines("data/day09_test.txt")
-@test solve(test_lines; part1=true) == 50
-@test solve(test_lines) == 24
-
-lines = readlines("data/day09.txt")
-println(solve(lines; part1=true))
-println(solve(lines))
-
-
-# i = findfirst(s -> s == "11,1", lines)
-# deleteat!(lines, i)
-# insert!(lines, i, "11,2")
-# insert!(lines, i, "10,2")
-# insert!(lines, i, "10,1")
-
-
-
 #=
 Optimisations:
  - Optimize part1 and translate it to part2
@@ -274,19 +257,139 @@ Optimisations:
  - save on unnecessary operations
 =#
 
+### Using the structure of the input, we obtain the following code
 
-# Δ = 100
-# vals = Δ .+ [5, 6, 7, 6, 2, 10, 1, 3, 4, 4, 8, 7, 3]
-# min_, max_ = Δ + 3, Δ + 7
-# sorted_indices = sortperm(vals)
+function parse_lines(lines)
+    X = fill(-1, length(lines))
+    Y = fill(-1, length(lines))
 
-# i_of_min, i_of_max = findfirst(==(min_), vals), findfirst(==(max_), vals)
-# println("min = $(vals[i_of_min]), max = $(vals[i_of_max]) (excluded)")
-# i1 = searchsortedfirst(sorted_indices, i_of_min; by=x -> vals[x] - v1)
-# i2 = searchsortedlast(sorted_indices, i_of_max; by=x -> vals[x] - v2)
-# println(vals[sorted_indices[i1:i2]])
+    for (i, line) in enumerate(lines)
+        bytes = codeunits(line)
+        val = 0
 
-# sorted_vals = view(vals, sorted_indices)
-# i1 = searchsortedfirst(sorted_vals, min_ + 1)
-# i2 = searchsortedlast(sorted_vals, max_ - 1)
-# println(vals[sorted_indices[i1:i2]])
+        j = 1
+        while bytes[j] != UInt8(',')
+            val = 10val + bytes[j] - 0x30
+            j += 1
+        end
+        X[i] = val
+
+        val = 0
+        j += 1
+        while j <= length(bytes)
+            val = 10val + bytes[j] - 0x30
+            j += 1
+        end
+        Y[i] = val
+    end
+    return X, Y
+end
+
+function solve_part1(lines)
+    x, y = parse_lines(lines)
+    n = length(x)
+    sixteenth = n ÷ 16
+    max_area = 0
+    for i in sixteenth:3sixteenth
+        for j in 9sixteenth:11sixteenth
+            max_area = max(max_area, (x[i] - x[j] + 1) * (y[i] - y[j] + 1))
+        end
+    end
+
+    for i in 5sixteenth:7sixteenth
+        for j in 13sixteenth:15sixteenth
+            max_area = max(max_area, (x[j] - x[i] + 1) * (y[i] - y[j] + 1))
+        end
+    end
+    return max_area
+end
+
+function solve_part2(lines)
+    x, y = parse_lines(lines)
+    n = length(x)
+    mid = n ÷ 2
+    iA = mid + 1
+    xA = x[iA]
+
+    iB = 1
+    while x[iB] > xA
+        iB += 1
+    end
+    iB -= 1
+    yB = y[iB]
+
+    iC = mid
+    while y[iC] < yB
+        iC -= 1
+    end
+    xC = x[iC]
+
+    xD = xC
+    iD = iC
+    for i in mid:-1:iC+1
+        if x[i] >= xD
+            xD = x[i]
+            iD = i
+        end
+    end
+
+    area_top = (x[iA] - x[iD] + 1) * (y[iD] - y[iA] + 1)
+
+    # default(; label=false)
+    # f = plot(points)
+    # vline!([xA])
+    # hline!([yB])
+    # vline!([xC])
+    # scatter!(points[[iA, iD]])
+
+    iA = mid + 2
+    xA = x[iA]
+
+    iB = n
+    while x[iB] > xA
+        iB -= 1
+    end
+    yB = y[iB]
+
+    iC = mid + 3
+    while y[iC] > yB
+        iC += 1
+    end
+    iC -= 1
+    xC = x[iC]
+
+    xD = xC
+    iD = iC
+    for i in mid:-1:iC+1
+        if x[i] >= xD
+            xD = x[i]
+            iD = i
+        end
+    end
+    area_bot = (x[iA] - x[iD] + 1) * (y[iA] - y[iD] + 1)
+
+    # vline!([xA])
+    # hline!([yB])
+    # vline!([xC])
+    # scatter!(points[[iA, iD]])
+    return max(area_top, area_bot)  # return f
+end
+
+function solve(lines; part1=false)
+    if part1
+        return solve_part1(lines)
+    else
+        return solve_part2(lines)
+    end
+end
+
+
+test_lines = readlines("data/day09_test.txt")
+@test solve_testable(test_lines; part1=true) == 50
+@test solve_testable(test_lines) == 24
+
+lines = readlines("data/day09.txt")
+@test solve(lines; part1=true) == solve_testable(lines; part1=true)
+@test solve(lines) == solve_testable(lines)
+println(solve(lines; part1=true))
+println(solve(lines))
